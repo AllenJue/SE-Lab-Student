@@ -1,0 +1,65 @@
+# myprog: search 2d array, colume major
+	.pos 0
+	irmovq stack, %rsp  	# Set up stack pointer
+	call main		# Execute main program
+	halt			# Terminate program 
+
+# 4x4 matrix
+	.align 8
+array:	.quad 0x8a
+	.quad 0x55
+	.quad 0x0c
+    .quad 0xe3
+    .quad 0xe2
+	.quad 0x7d
+    .quad 0x25
+    .quad 0xf5
+    .quad 0xf4
+	.quad 0x34
+	.quad 0xe9
+    .quad 0x7b
+    .quad 0xf6
+	.quad 0xd3
+    .quad 0x12
+    .quad 0x65
+
+main:
+    irmovq array,%rdi
+	irmovq $4,%rsi
+	call searchMin		# searchMin(array, 4)
+	ret
+
+# long searchMin(long *start, long dim)
+# start in %rdi, dim in %rsi
+searchMin:
+    irmovq $1,%r8       # Constant 1
+	irmovq $8,%r9       # Constant 8
+	irmovq $32,%r10     # Constant 32
+    irmovq $128,%r11    # Constant 128
+    mrmovq (%rdi),%rax  # min = *start
+    rrmovq %rsi,%r12    # numCol = dim
+    andq %r12,%r12	    # Set CC
+    jmp     test1       # goto test1
+loop1:
+    rrmovq %rsi,%r13    # numRow = dim
+    andq %r13,%r13	    # Set CC
+    jmp     test2       # goto test2
+loop2:
+    mrmovq (%rdi),%r14  # get current element
+    subq %rax,%r14      # compare to min, set CC
+    mrmovq (%rdi),%r14  #
+    cmovl %r14,%rax     # if ele < min, min = ele
+    addq %r10,%rdi      # next row
+	subq %r8,%r12       # numRow--, set CC
+test2:
+    jne loop2           # Stop when 0
+    subq %r11,%rdi      #
+    addq %r9,%rdi       # next col
+	subq %r10,%r12      # numcol--, set CC
+test1:
+    jne loop1           # Stop when 0
+    ret                 # return
+
+# The stack starts here and grows to lower addresses
+	.pos 0x400		
+stack:	 

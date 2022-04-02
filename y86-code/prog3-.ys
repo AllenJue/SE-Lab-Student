@@ -1,0 +1,16 @@
+# Testing push and pop instructions.
+  irmovq stack, %rsp
+  irmovq $3, %rax
+  nop
+  nop
+  nop
+  pushq %rax
+  nop
+  nop
+  nop
+  popq %rbx
+  halt
+
+.pos 0x40
+  stack:  # Program's stack pointer.
+  

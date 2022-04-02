@@ -1,0 +1,70 @@
+# Design your own testcase here
+.pos 0
+irmovq stack, %rsp
+call main
+halt
+
+#Array used for memory operations
+    .align 8
+array:  .quad 0x010203405060
+    .quad 0xa0b0c0d0e0f0
+    .quad 0x314159265358
+    .quad 0x987654321000
+    .quad 0x246813572468
+    .quad 0x000000000000
+    .quad 0x123456789124
+    .quad 0x121645348631
+    .quad 0x124643548646
+    .quad 0x121564756445
+    .quad 0x545445457875
+    .quad 0x567865366959
+
+main:
+    irmovq $2, %rdi
+    irmovq $1024, %rsi
+    irmovq $0, %rdx
+    irmovq array, %rcx
+    call test_batch1
+    ret
+
+#Recursive function that performs multiple ALU operations on data consecutively to test forwarding capabilities,
+#has a jump that is continously mispredicted as well as a load/use hazard near a return statement to test for load/use-return combinations
+test_batch1:
+    pushq %rbp
+    rrmovq %rsi, %rbp
+    subq %rdi, %rbp        # Set CC codes
+    jl return_pt2          # This will mispredict until the condition are satsified such that the recursion stops. End recursion once %rdi is bigger %rbp which store %rsi 
+    pushq %rbx
+    pushq %r12
+    rrmovq %rdi, %rbx      #Save %rax and %rdi
+    rrmovq %rax, %r12
+    irmovq $0, %rax
+    irmovq $5, %r10
+    addq %rdi, %rdi        # Multiple back to back forwarding operations to test cache and pipe   
+    addq %rdi, %rdi
+    addq %rdi, %rdi
+    subq %rbx, %rdi        # %rdi is now 2 times greater than its original valeu
+    addq %rdi, %rax        # These next ALU operations have no other function than for more forwarding tests
+    andq %r10, %rax
+    xorq %rax, %rax
+    rrmovq %r12, %rax      #Restore %rax after ALU operations                             
+    irmovq 8, %r10
+    addq %rdx, %rcx       
+    mrmovq (%rcx), %rbx    #Another Load/use
+    addq %rbx, %rax        #Add the array element to %rax
+    addq %r10, %rdx
+    rrmovq %rax, %r12      #Store %rax
+    call test_batch1
+    addq %r12, %rax        #Make the return value the sum of the caller and callee %rax
+    jmp return_pt1
+return_pt1:
+    popq %rbx
+    popq  %r12
+return_pt2:
+    popq %rbp             #Artificially create load/use hazard right before return
+    andq %rbp, %rbp
+    ret
+    
+# This is the beginning of the stack
+    .pos 0x200
+stack:

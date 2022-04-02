@@ -1,0 +1,9 @@
+# Testing moving immediate values to registers and adding.
+  irmovq $10,%rdx
+  irmovq  $3,%rax
+  nop
+  nop
+  nop
+  addq %rdx,%rax
+  halt
+  

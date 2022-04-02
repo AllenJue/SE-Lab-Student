@@ -1,0 +1,23 @@
+# Testing jumps and conditional moves.
+  irmovq $5, %rax   # Loop variable.
+  irmovq $1, %rbx   # Constant.
+  irmovq $10, %rdx  # Constant.
+  jmp test
+loop:
+  nop               # When the branch is mispredicted, make sure to read nops.
+  nop
+  nop
+  rrmovq %rax, %rcx
+  nop
+  nop
+  nop
+  subq %rbx, %rcx
+  cmove %rdx, %r8   # If %rax == 1, move the value 10 to %r8 (note that this is an rrmovq with an ifun).
+  subq %rbx, %rax
+test:
+  nop
+  nop
+  nop
+  andq %rax, %rax
+  jne loop
+  halt              # Don't need to pad nops here.

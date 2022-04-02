@@ -1,0 +1,12 @@
+irmovq $0xad, %rax
+irmovq $15, %rcx
+shlq %rcx, %rax
+irmovq $1, %rbx
+irmovq $63, %rdx
+shlq %rdx, %rbx
+jl passed
+halt
+passed:
+irmovq $0x0, %r9
+shlq %rdx, %r9  
+halt

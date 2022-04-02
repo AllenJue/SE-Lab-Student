@@ -1,0 +1,16 @@
+irmovq $0xFFFFFFFFFFFFFFFF, %rax
+irmovq $0x0101010101010101, %rbx
+vecadd %rbx, %rax
+je target
+halt
+target:
+irmovq $0x7F00000000000000, %rcx
+irmovq $0x0111111111110011, %rdx
+vecadd %rcx, %rdx
+jl passed
+halt
+passed:
+irmovq $0x0fedcba987654321, %r9
+irmovq $0x123456789abcdef0, %r10
+vecadd %r9, %r10
+halt

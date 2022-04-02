@@ -1,0 +1,13 @@
+# Testing the different OPq instructions.
+  irmovq $1, %rax
+  irmovq $2, %rbx
+  irmovq $3, %rcx
+  irmovq $4, %rdx
+  addq %rax, %rax # %rax should store 2.
+  nop
+  nop
+  nop
+  subq %rax, %rbx # %rbx should store 0 (will report as unchanged).
+  andq %rax, %rcx # %rcx should store 2.
+  xorq %rax, %rdx # %rdx should store 6.
+  halt
