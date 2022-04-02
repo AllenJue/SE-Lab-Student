@@ -1,0 +1,35 @@
+# Testing procedure call and return.
+main:
+  irmovq stack, %rsp
+  irmovq $3, %rdi
+  irmovq $5, %rsi
+  nop
+  nop
+  nop
+  call foo      # Should also write the return address to the stack.
+  halt
+
+# Program for multiplying %rdi by %rsi.
+foo:
+  irmovq $1, %rcx
+  xorq %rax, %rax
+  jmp test
+loop:
+  nop
+  nop
+  nop
+  addq %rdi, %rax
+  subq %rcx, %rsi
+test:
+  nop
+  nop
+  nop
+  andq %rsi, %rsi
+  jne loop
+  ret           # %rax should hold the value 15 when we return.
+  nop
+  nop
+  nop
+
+.pos 0x100
+  stack:        # Program's stack pointer.

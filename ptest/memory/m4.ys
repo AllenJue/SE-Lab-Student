@@ -1,0 +1,59 @@
+# compare: get the difference between two arrays
+# Execution begins at address 0 
+	.pos 0 
+	irmovq stack, %rsp  	# Set up stack pointer  
+	call main		# Execute main program
+	halt			# Terminate program 
+
+#Arrays of 8 elements
+    .align 8
+array1:
+    .quad 0x00000001
+    .quad 0x00000002
+    .quad 0x00000003
+    .quad 0x00000004
+    .quad 0x00000005
+    .quad 0x00000006
+    .quad 0x00000007
+    .quad 0x00000008
+array2:
+    .quad 0x00000008
+    .quad 0x00000007
+    .quad 0x00000006
+    .quad 0x00000005
+    .quad 0x00000004
+    .quad 0x00000003
+    .quad 0x00000002
+    .quad 0x00000001
+
+main:	irmovq array1,%rdi	
+	irmovq array2,%rsi
+    irmovq $8, %rdx
+	call compare		# compare(array1, array2, count)
+	ret 
+
+/* $begin compare-ys */
+# long compare(long *array1, long *array2, long count)
+# array1 in %rdi, array2 in %rsi, count in %rdx
+compare:
+    irmovq $8, %r8      # Constant 8
+    irmovq $1,%r9	    # Constant 1
+    xorq %rax, %rax     # sum = 0
+    andq %rdx,%rdx		# Set condition codes
+	jmp  test
+loop:
+    mrmovq (%rdi),%r10	# x = *array1
+    mrmovq (%rdi),%r11	# y = *array2
+    subq %r11, %r10     # x-y
+    addq %r10, %rax     # Add to sum
+    addq %r8, %rdi      # array1++
+    addq %r8, %rsi      # array2++
+    subq %r9, %rdx      # count--
+test:
+    jne loop            # stop when 0
+    ret
+/* $end compare-ys */
+
+# The stack starts here and grows to lower addresses
+	.pos 0x200		
+stack:

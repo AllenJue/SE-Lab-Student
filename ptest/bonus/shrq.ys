@@ -1,0 +1,16 @@
+irmovq stack, %rsp
+call test
+halt
+
+test:
+irmovq $-1, %rax
+irmovq $63, %rbx
+shrq %rbx, %rax
+irmovq $0x7FFFFFFFFFFFFFFF, %rcx
+jl target
+ret
+target:
+shrq %rbx, %rcx
+ret
+.pos 0x80
+stack:

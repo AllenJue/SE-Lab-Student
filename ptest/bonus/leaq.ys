@@ -1,0 +1,17 @@
+irmovq $3, %rax
+irmovq $0, %rbx
+leaq 0x0(%rax), %rcx
+leaq 0xA(%rcx), %rdx
+addq %rcx, %rdx
+leaq 0x0(%rbx), %rsi
+irmovq $0x8, %r9
+leaq 0x80(%r9), %r10
+mrmovq 0x0(%r10), %r11
+leaq 0x9(%r11), %r12
+rmmovq %rdx, 0x0(%r12)  
+halt
+
+.pos 0x88
+.quad $0x100
+.pos 0x109
+.quad $0x00

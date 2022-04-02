@@ -1,0 +1,9 @@
+irmovq $-1, %rax
+irmovq $63, %rbx
+sarq %rbx, %rax
+irmovq $0x7FFFFFFFFFFFFFFF, %rcx
+jl target
+halt
+target:
+sarq %rbx, %rcx
+halt

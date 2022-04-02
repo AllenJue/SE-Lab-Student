@@ -1,0 +1,20 @@
+# Testing moving values between registers and memory.
+  irmovq mem, %rax
+  irmovq $10, %rbx
+  nop
+  nop
+  nop
+  rrmovq %rbx, %rcx
+  nop
+  nop
+  nop
+  rmmovq %rcx, 0(%rax)
+  nop
+  nop
+  nop
+  mrmovq 0(%rax), %rdx
+  halt
+
+.pos 0x40
+  mem:    # Position to store a value. Stores 10 at the end of execution.
+  

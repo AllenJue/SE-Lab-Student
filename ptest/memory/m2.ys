@@ -1,0 +1,45 @@
+	.pos 0
+init:
+        #Set up stack pointer
+        irmovq stack, %rsp
+        call main
+        halt
+
+        .align 8
+
+array:
+        .quad 0x00000000000010
+        .quad 0x00000000000020
+        .quad 0x00000000000030
+        .quad 0x00000000000040
+        .quad 0x00000000000050
+        .quad 0x00000000000060
+        .quad 0x00000000000070
+        .quad 0x00000000000000
+
+main:
+        irmovq array, %rdi
+        call shift
+        ret
+
+shift:
+        irmovq $8, %r9
+	pushq %rdi
+        mrmovq (%rdi), %rcx
+
+loop:
+	rrmovq %rcx, %rdx
+        andq %rdx, %rdx
+        je done
+        addq %r9, %rdi
+        mrmovq (%rdi), %rcx
+	rmmovq %rdx, (%rdi)
+        jmp loop
+
+done:
+	popq %rdi
+	rmmovq %rdx, (%rdi)
+        ret
+
+        .pos 0x100
+stack:
