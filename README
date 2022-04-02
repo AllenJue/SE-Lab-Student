@@ -1,0 +1,56 @@
+/***********************************************************************
+ * Y86-64 Tools (Student Distribution)
+ *
+ * Copyright (c) 2002, 2010, 2015, R. Bryant and D. O'Hallaron,
+ * All rights reserved. May not be used, modified, or copied
+ * without permission.
+ *
+ * Updated 2021: M. Hinton
+ ***********************************************************************/ 
+
+yas		Y86-64 assembler
+yis		Y86-64 instruction (ISA) simulator 
+ssim		SEQ simulator
+psim		PIPE simulator
+
+*************************
+1. Building the Y86-64 tools
+*************************
+
+To build the Y86-64 tools, perform the following steps:
+
+unix> make clean; make
+
+********
+2. Files
+********
+
+Makefile
+	Builds the Y86-64 tools
+
+README
+	This file
+
+misc/	
+	Source files for the Y86-64 instruction
+	simulator yis, and the isa.c file that is used to compare outputs
+    for the other simulators
+
+seq/	
+	Code for the SEQ simulator. This is provided as reference
+
+pipe/	
+	Code for the PIPE simulator. You will need to modify psim.c.
+
+cache/	
+	Code for the CACHE simulator. You will need to modify cache.c.
+
+pipe-cache/	
+	Code for the PIPE with CACHE simulator. You will need to modify pcsim.c.
+
+y86-code/
+	Example .ys files from CS:APP and scripts for conducting
+	automated benchmark teseting of the new processor designs.
+
+ptest/
+	Automated regression testing scripts for testing processor designs.
