@@ -1,0 +1,55 @@
+/***********************************************************************
+ * Sequential Y86-64 Simulators
+ *
+ * Copyright (c) 2002, 2010, 2013, 2015  R. Bryant and D. O'Hallaron,
+ * All rights reserved.
+ * May not be used, modified, or copied without permission.
+ *
+ * Updated 2021: M. Hinton
+ ***********************************************************************/ 
+
+This directory contains the code to construct simulators for SEQ,
+SEQ+, and the variants of it described in the homework exercises.
+
+**************************
+1. Building the simulators
+**************************
+
+The simulators run in TTY mode:
+
+TTY mode: A simulator running in TTY mode prints all information
+about its runtime behavior on the terminal.  It's hard to understand what's
+going on, but useful for automated testing, and doesn't require any
+special installation features.
+
+Once you've configured the Makefile, you can build the different
+simulators with commands of the form
+
+unix> make clean; make
+
+***********************
+2. Using the simulators
+***********************
+
+The simulators take identical command line arguments:
+
+Usage: ssim [-hi] [-l m] [-v n] file.yo
+
+   -h     Print this message
+   -l m   Set instruction limit to m [non interactive mode only] (default 10000)
+   -v n   Set verbosity level to 0 <= n <= 2 [non interactive mode only] (default 2)
+   -i     Runs the simulator in interactive mode
+
+When the simulator is run in non-interactive mode, its output is compared against yis.
+
+********
+3. Files
+********
+
+Makefile		Builds the SEQ simulator
+README			This file
+
+ssim.c			Base sequential simulator code and header file
+sim.h
+
+

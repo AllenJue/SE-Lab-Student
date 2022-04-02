@@ -1,0 +1,58 @@
+/***********************************************************************
+ * Pipelined Y86-64 Simulator
+ *
+ * Copyright (c) 2002, 2010, 2015 R. Bryant and D. O'Hallaron,
+ * All rights reserved.
+ * May not be used, modified, or copied without permission.
+ *
+ * Updated 2021: M. Hinton
+ ***********************************************************************/ 
+
+This directory contains the code to construct simulators for PIPE and
+the variants of it described in the homework exercises.
+
+*************************
+1. Building the simulator
+*************************
+
+The Makefile can be configured to build simulators that support
+TTY interfaces. A simulator running in TTY mode prints all
+information about its runtime behavior on the terminal.  It's hard to
+understand what's going on, but useful for automated testing, and
+doesn't require any special installation features. 
+
+unix> make clean; make
+
+***********************
+2. Using the simulators
+***********************
+
+The simulator recognizes the following command line arguments:
+
+Usage: psim [-hi] [-l m] [-v n] file.yo
+
+   -h     Print this message
+   -l m   Set instruction limit to m [non interactive mode only] (default 10000)
+   -v n   Set verbosity level to 0 <= n <= 2 [non interactive mode only] (default 2)
+   -i     Runs the simulator in interactive mode
+
+When the simulator is run in non-interactive mode, its output is compared against yis.
+
+********
+3. Files
+********
+
+Makefile		Build the simulator
+README			This file
+
+*****************************
+* PIPE simulator source files
+*****************************
+
+psim.c			Base simulator code
+sim.h			PIPE header files
+pipeline.h
+stages.h
+
+
+

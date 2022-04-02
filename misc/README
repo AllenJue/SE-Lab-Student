@@ -1,0 +1,41 @@
+/***********************************************************************
+ * Y86-64 Assembler, Instruction Simulator, and HCL translator
+ *
+ * Copyright (c) 2002, R. Bryant and D. O'Hallaron, All rights reserved.
+ * May not be used, modified, or copied without permission.
+ *
+ * Updated 2021: M. Hinton
+ ***********************************************************************/ 
+
+This directory contains all of the source files for the following:
+
+YAS	Y86-64 assembler
+YIS	Y86-64 instruction level simulator
+
+*********************
+1. Building the tools
+*********************
+
+unix> make clean
+unix> make
+
+********
+2. Files
+********
+
+Makefile		Builds yis
+README			This file
+
+
+* Instruction simulator code shared by yis, ssim, ssim+, and psim
+isa.c		
+isa.h
+
+* pre-built yas assembler
+yas			    The YAS binary
+
+* Files used to build the yis instruction simulator
+yis			    The YIS binary
+yis.c			yis source file
+
+
