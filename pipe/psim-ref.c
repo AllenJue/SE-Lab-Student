@@ -640,15 +640,51 @@ void do_decode_stage()
     d_regvalb = get_reg_val(reg, execute_input->srcb);
 
     
-    /* TODO: Implement forwarding for valA and valB */
+    //forward/select valA
+
     if((decode_output->icode) == (I_CALL) || (decode_output->icode) ==  (I_JMP)) {
-        execute_input -> vala = (decode_output->valp);
+        execute_input -> vala =   (decode_output->valp);
+    }
+    else if ((execute_input->srca) == (memory_input->deste)) {
+        execute_input -> vala =   (memory_input->vale);
+    }
+    else if ((execute_input->srca) == (memory_output->destm)) {
+        execute_input -> vala =   (writeback_input->valm);
+    }
+    else if ((execute_input->srca) == (memory_output->deste)) {
+        execute_input -> vala =  (memory_output->vale);
+    }
+    else if (((execute_input->srca) == (writeback_output->destm))) {
+            execute_input -> vala = (writeback_output->valm);
+    }
+    else if (((execute_input->srca) == (writeback_output->deste))) {
+            execute_input -> vala = (writeback_output->vale);
     }
     else {
-      execute_input -> vala = (d_regvala);
+      execute_input -> vala =  (d_regvala);
+
     }
 
-    execute_input -> valb = d_regvalb;
+    //forward/select valB
+
+    if ((execute_input->srcb) == (memory_input->deste)) {
+        execute_input -> valb = (memory_input->vale);
+    }
+    else if (((execute_input->srcb) == (memory_output->destm)) ) {
+        execute_input -> valb = (writeback_input->valm) ;
+    }
+    else if  ((execute_input->srcb) == (memory_output->deste)) {
+        execute_input -> valb = (memory_output->vale);
+    }
+    else if  ((execute_input->srcb) == (writeback_output->destm)) {
+        execute_input -> valb = (writeback_output->valm);
+    }
+    else if (((execute_input->srcb) == (writeback_output->deste))) {
+        execute_input -> valb =  (writeback_output->vale);
+    }
+    else {
+        execute_input -> valb = d_regvalb;
+    }
 
 
     execute_input->icode = decode_output->icode;
@@ -674,7 +710,7 @@ void do_execute_stage()
     alua = alub = 0;
 
     /* 
-     * TODO: Condition codes should not be updated if there is an error further in the pipeline. 
+     * TODO: Condition codes should not be updated if there is an error/halt further in the pipeline. 
      *       Make sure setcc remains false if the status of future pipeline registers is an error or halt. 
      */
     if ((execute_output->icode) == (I_ALU)) {
@@ -818,7 +854,8 @@ void do_memory_stage()
     writeback_input->valm = valm;
     writeback_input->deste = memory_output->deste;
     writeback_input->destm = memory_output->destm;
-    /* TODO: Update the status to account for errors. */
+    /* TODO: Update the status to account for memory access errors.
+     * hint: use dmem_error, which is already set for you. */
     writeback_input->status = memory_output->status;
     writeback_input->stage_pc = memory_output->stage_pc;
 
@@ -878,15 +915,54 @@ long long check_load_use();
 long long check_mispredicted_branch();
 long long check_return();
 
+long long f_stall();
+long long d_stall();
+long long w_stall();
+long long d_bubble();
+long long e_bubble();
+long long m_bubble();
+
 void do_stall_check()
 {
     // dummy placeholders to show the usage of pipe_cntl()
-    fetch_state->op = pipe_cntl("PC", false, false);
-    decode_state->op = pipe_cntl("ID", false, false);
-    execute_state->op = pipe_cntl("EX", false, false);
-    memory_state->op = pipe_cntl("MEM", false, false);
-    writeback_state->op = pipe_cntl("WB", false, false);
+    fetch_state->op = pipe_cntl("PC", f_stall(), false);
+    decode_state->op = pipe_cntl("ID", d_stall(), d_bubble());
+    execute_state->op = pipe_cntl("EX", false, e_bubble());
+    memory_state->op = pipe_cntl("MEM", false, m_bubble());
+    writeback_state->op = pipe_cntl("WB", w_stall(), false);
 
+}
+
+long long f_stall() {
+   return check_load_use() || check_return();
+}
+
+long long d_stall() {
+     return check_load_use();
+}
+
+long long w_stall()
+{
+    return ((writeback_output->status) == (STAT_ADR) || (writeback_output->status)
+       == (STAT_INS) || (writeback_output->status) == (STAT_HLT));
+}
+
+long long d_bubble()
+{
+    return check_mispredicted_branch() || (!check_load_use() && check_return());
+}
+
+long long e_bubble()
+{
+    return check_load_use() || check_mispredicted_branch();
+}
+
+long long m_bubble()
+{
+    return (((writeback_input->status) == (STAT_ADR) || (writeback_input->status)
+         == (STAT_INS) || (writeback_input->status) == (STAT_HLT)) | (
+        (writeback_output->status) == (STAT_ADR) || (writeback_output->status) ==
+        (STAT_INS) || (writeback_output->status) == (STAT_HLT)));
 }
 
 // These are just helper methods for improving readability.
@@ -895,19 +971,21 @@ void do_stall_check()
 // Returns true if there is a load-use hazard 
 // in the pipeline, false otherwise.
 long long check_load_use() {
-    return false;
+    return ((execute_output->icode == I_MRMOVQ || execute_output->icode ==
+          I_POPQ) && (execute_output->destm == execute_input->srca ||
+          execute_output->destm == execute_input->srcb));
 }
 
 // Returns true if there is a mispredicted branch hazard 
 // in the pipeline, false otherwise.
 long long check_mispredicted_branch() {
-    return false;
+    return ((execute_output->icode == I_JMP) && !memory_input->takebranch);
 }
 
 // Returns true if there is a return hazard 
 // in the pipeline, false otherwise.
 long long check_return() {
-    return false;
+    return (I_RET == decode_output->icode || I_RET == execute_output->icode || I_RET == memory_output->icode);
 }
 
 /*
