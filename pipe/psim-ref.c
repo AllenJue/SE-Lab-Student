@@ -540,7 +540,7 @@ void do_fetch_stage()
     decode_input->icode = imem_icode;
     decode_input->ifun  = imem_ifun;
 
-    instr_valid = ((decode_input->icode) == (I_NOP) || (decode_input->icode) ==  (I_HALT) || (decode_input->icode) == (I_RRMOVQ) || (decode_input->icode)  == (I_IRMOVQ) || (decode_input->icode) == (I_RMMOVQ) ||  (decode_input->icode) == (I_MRMOVQ) || (decode_input->icode) == (I_ALU)   || (decode_input->icode) == (I_JMP) || (decode_input->icode) == (I_CALL) || (decode_input->icode) == (I_RET) || (decode_input->icode) ==  (I_PUSHQ) || (decode_input->icode) == (I_POPQ) || (decode_input->icode) == (I_LEAQ) || (decode_input->icode) == (I_VECADD) || (decode_input->icode) == (I_SHF));
+    instr_valid = ((decode_input->icode) == (I_NOP) || (decode_input->icode) ==  (I_HALT) || (decode_input->icode) == (I_RRMOVQ) || (decode_input->icode)  == (I_IRMOVQ) || (decode_input->icode) == (I_RMMOVQ) ||  (decode_input->icode) == (I_MRMOVQ) || (decode_input->icode) == (I_ALU)   || (decode_input->icode) == (I_JMP) || (decode_input->icode) == (I_CALL) || (decode_input->icode) == (I_RET) || (decode_input->icode) ==  (I_PUSHQ) || (decode_input->icode) == (I_POPQ));
 
     if(!instr_valid) {
         decode_input -> status = STAT_INS;
@@ -553,13 +553,13 @@ void do_fetch_stage()
     }
 
     valp++;
-    if ((decode_input->icode) == (I_RRMOVQ) || (decode_input->icode) == (I_ALU) || (decode_input->icode) == (I_PUSHQ) || (decode_input->icode)== (I_POPQ) || (decode_input->icode) == (I_IRMOVQ) || (decode_input->icode) == (I_RMMOVQ) || (decode_input->icode) == (I_MRMOVQ) || (decode_input->icode) == (I_LEAQ) || (decode_input->icode) == (I_VECADD)  || (decode_input->icode) == (I_SHF)) {
+    if ((decode_input->icode) == (I_RRMOVQ) || (decode_input->icode) == (I_ALU) || (decode_input->icode) == (I_PUSHQ) || (decode_input->icode)== (I_POPQ) || (decode_input->icode) == (I_IRMOVQ) || (decode_input->icode) == (I_RMMOVQ) || (decode_input->icode) == (I_MRMOVQ)) {
 	    get_byte_val(mem, valp, &byte1);
 	    valp ++;
     }
     decode_input->ra = HI4(byte1);
     decode_input->rb = LO4(byte1);
-    if ((decode_input->icode) == (I_IRMOVQ) || (decode_input->icode) == (I_RMMOVQ) || (decode_input->icode) == (I_MRMOVQ) || (decode_input->icode) == (I_JMP) || (decode_input->icode) == (I_CALL) || (decode_input->icode) == (I_LEAQ)) {
+    if ((decode_input->icode) == (I_IRMOVQ) || (decode_input->icode) == (I_RMMOVQ) || (decode_input->icode) == (I_MRMOVQ) || (decode_input->icode) == (I_JMP) || (decode_input->icode) == (I_CALL)) {
 	    get_word_val(mem, valp, &valc);
 	    valp+= 8;
     }
@@ -594,7 +594,7 @@ void do_fetch_stage()
 void do_decode_stage()
 {
     //set srcA
-    if(decode_output -> icode == I_RRMOVQ || decode_output -> icode == I_RMMOVQ || decode_output -> icode == I_ALU || decode_output -> icode == I_PUSHQ || decode_input->icode == I_VECADD || decode_input->icode == I_SHF) {
+    if(decode_output -> icode == I_RRMOVQ || decode_output -> icode == I_RMMOVQ || decode_output -> icode == I_ALU || decode_output -> icode == I_PUSHQ) {
         execute_input -> srca = decode_output-> ra;
     }
     else if(decode_output -> icode == I_POPQ || decode_output -> icode == I_RET) {
@@ -604,7 +604,7 @@ void do_decode_stage()
         execute_input -> srca = REG_NONE;
     }
     //set srcB
-    if(decode_output -> icode == I_ALU || decode_output -> icode == I_RMMOVQ || decode_output -> icode == I_MRMOVQ || decode_output->icode == I_RRMOVQ || (decode_output->icode) == (I_LEAQ) || decode_output->icode == I_VECADD || decode_output->icode == I_SHF) {
+    if(decode_output -> icode == I_ALU || decode_output -> icode == I_RMMOVQ || decode_output -> icode == I_MRMOVQ || decode_output->icode == I_RRMOVQ) {
         execute_input -> srcb = decode_output -> rb;
     }
     else if(decode_output -> icode == I_PUSHQ || decode_output -> icode == I_POPQ || decode_output -> icode == I_CALL || decode_output -> icode == I_RET) {
@@ -616,7 +616,7 @@ void do_decode_stage()
     }
 
     //set destE
-    if(decode_output -> icode == I_RRMOVQ || decode_output -> icode == I_IRMOVQ || decode_output -> icode == I_ALU || decode_output->icode == I_VECADD || decode_output->icode == I_SHF) {
+    if(decode_output -> icode == I_RRMOVQ || decode_output -> icode == I_IRMOVQ || decode_output -> icode == I_ALU) {
         execute_input -> deste = decode_output -> rb;
     }
     else if(decode_output -> icode == I_PUSHQ || decode_output -> icode == I_POPQ || decode_output -> icode == I_CALL || decode_output -> icode == I_RET) {
@@ -624,10 +624,6 @@ void do_decode_stage()
     }
     else {
         execute_input -> deste = REG_NONE;
-    }
-
-    if(decode_output->icode == I_LEAQ) {
-        execute_input -> deste = decode_output -> ra;
     }
 
     //set destM
@@ -697,7 +693,7 @@ void do_decode_stage()
 
 long long set_cc()
 {
-    return ((((execute_output->icode) == (I_ALU) || (execute_output->icode) == (I_VECADD) || (execute_output->icode) == (I_SHF)) & !((writeback_input->status) == (STAT_ADR) ||
+    return ((((execute_output->icode) == (I_ALU)) & !((writeback_input->status) == (STAT_ADR) ||
           (writeback_input->status) == (STAT_INS) || (writeback_input->status) ==
           (STAT_HLT))) & !((writeback_output->status) == (STAT_ADR) ||
         (writeback_output->status) == (STAT_INS) || (writeback_output->status) ==
@@ -727,10 +723,10 @@ void do_execute_stage()
         alufun = A_ADD;
     }
 
-    if(execute_output -> icode == I_RRMOVQ || execute_output -> icode == I_ALU || execute_output->icode  == I_VECADD  || execute_output->icode == I_SHF) {
+    if(execute_output -> icode == I_RRMOVQ || execute_output -> icode == I_ALU) {
         alua = execute_output -> vala;
     }
-    else if(execute_output -> icode == I_IRMOVQ || execute_output -> icode == I_RMMOVQ || execute_output -> icode == I_MRMOVQ || execute_output -> icode == I_LEAQ) {
+    else if(execute_output -> icode == I_IRMOVQ || execute_output -> icode == I_RMMOVQ || execute_output -> icode == I_MRMOVQ) {
         alua = execute_output -> valc;
     }
     else if(execute_output -> icode == I_CALL || execute_output -> icode == I_PUSHQ) {
@@ -743,7 +739,7 @@ void do_execute_stage()
         alua = 0;
     }
 
-    if(execute_output -> icode == I_RMMOVQ || execute_output -> icode == I_MRMOVQ || execute_output -> icode == I_ALU || execute_output -> icode == I_CALL || execute_output -> icode == I_PUSHQ || execute_output -> icode == I_RET || execute_output -> icode == I_POPQ || execute_output -> icode == I_LEAQ || execute_output->icode  == I_VECADD || execute_output->icode == I_SHF) {
+    if(execute_output -> icode == I_RMMOVQ || execute_output -> icode == I_MRMOVQ || execute_output -> icode == I_ALU || execute_output -> icode == I_CALL || execute_output -> icode == I_PUSHQ || execute_output -> icode == I_RET || execute_output -> icode == I_POPQ) {
         alub = execute_output -> valb;
     }
     else {
@@ -766,42 +762,6 @@ void do_execute_stage()
 
     if (setcc) {
 	    cc_in = compute_cc(alufun, alua, alub);
-    }
-
-    if (execute_output->icode  == I_VECADD) {
-        int zero_flag = 1;
-        int sign_flag = 0;
-        word_t out = 0;
-        byte_t *a_byte = (byte_t*)&alua;
-        byte_t *b_byte = (byte_t*)&alub;
-        byte_t *out_byte = (byte_t*)&out;
-        for (size_t i = 0; i < 8; i++) {
-            out_byte[i] = a_byte[i] + b_byte[i];
-            zero_flag &= (out_byte[i] == 0);
-            sign_flag |= ((out_byte[i] >> 7) != 0);
-        }
-        memory_input->vale = out;
-        cc_in = PACK_CC(zero_flag, sign_flag, 0);
-    }
-
-    if (execute_output->icode == I_SHF) {
-        word_t out = 0;
-        switch((shf_t)execute_output->ifun) {
-        case S_AR:
-            out = alub >> alua;
-            break;
-        case S_HL:
-            out = alub << alua;
-            break;
-        case S_HR:
-            out = ((uword_t)alub) >> alua;
-            break;
-        case S_NONE:
-            out = 0;
-            break;
-        }   
-        memory_input->vale = out;
-        cc_in = PACK_CC(!out, (out >> 63) & 0x1, 0);
     }
 
     memory_input->icode = execute_output->icode;
