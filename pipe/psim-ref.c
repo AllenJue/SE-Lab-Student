@@ -472,7 +472,7 @@ static byte_t sim_step_pipe(word_t ccount)
 	    writeback_output->status = STAT_PIP;
 
     /****************** Stage implementations ******************
-     * implement the following functions to simulate the
+     * TODO: implement the following functions to simulate the
      * executations in each stage.
      * You should also implement stalling, forwarding and branch
      * prediction to handle data hazards and control hazards.
@@ -505,7 +505,7 @@ static byte_t sim_step_pipe(word_t ccount)
 }
 
 /*************************** Fetch stage ***************************
- * update [*decode_input, f_pc, *fetch_input]
+ * TODO: update [*decode_input, f_pc, *fetch_input]
  * you may find these functions useful:
  * HPACK(), get_byte_val(), get_word_val(), HI4(), LO4()
  *
@@ -540,14 +540,26 @@ void do_fetch_stage()
     decode_input->icode = imem_icode;
     decode_input->ifun  = imem_ifun;
 
+    instr_valid = ((decode_input->icode) == (I_NOP) || (decode_input->icode) ==  (I_HALT) || (decode_input->icode) == (I_RRMOVQ) || (decode_input->icode)  == (I_IRMOVQ) || (decode_input->icode) == (I_RMMOVQ) ||  (decode_input->icode) == (I_MRMOVQ) || (decode_input->icode) == (I_ALU)   || (decode_input->icode) == (I_JMP) || (decode_input->icode) == (I_CALL) || (decode_input->icode) == (I_RET) || (decode_input->icode) ==  (I_PUSHQ) || (decode_input->icode) == (I_POPQ) || (decode_input->icode) == (I_LEAQ) || (decode_input->icode) == (I_VECADD) || (decode_input->icode) == (I_SHF));
+
+    if(!instr_valid) {
+        decode_input -> status = STAT_INS;
+    }
+    else if (decode_input -> icode == I_HALT) {
+        decode_input -> status = STAT_HLT;
+    }
+    else {
+        decode_input -> status = STAT_AOK;
+    }
+
     valp++;
-    if ((decode_input->icode) == (I_RRMOVQ) || (decode_input->icode) == (I_ALU) || (decode_input->icode) == (I_PUSHQ) || (decode_input->icode)== (I_POPQ) || (decode_input->icode) == (I_IRMOVQ) || (decode_input->icode) == (I_RMMOVQ) || (decode_input->icode) == (I_MRMOVQ)) {
+    if ((decode_input->icode) == (I_RRMOVQ) || (decode_input->icode) == (I_ALU) || (decode_input->icode) == (I_PUSHQ) || (decode_input->icode)== (I_POPQ) || (decode_input->icode) == (I_IRMOVQ) || (decode_input->icode) == (I_RMMOVQ) || (decode_input->icode) == (I_MRMOVQ) || (decode_input->icode) == (I_LEAQ) || (decode_input->icode) == (I_VECADD)  || (decode_input->icode) == (I_SHF)) {
 	    get_byte_val(mem, valp, &byte1);
 	    valp ++;
     }
     decode_input->ra = HI4(byte1);
     decode_input->rb = LO4(byte1);
-    if ((decode_input->icode) == (I_IRMOVQ) || (decode_input->icode) == (I_RMMOVQ) || (decode_input->icode) == (I_MRMOVQ) || (decode_input->icode) == (I_JMP) || (decode_input->icode) == (I_CALL)) {
+    if ((decode_input->icode) == (I_IRMOVQ) || (decode_input->icode) == (I_RMMOVQ) || (decode_input->icode) == (I_MRMOVQ) || (decode_input->icode) == (I_JMP) || (decode_input->icode) == (I_CALL) || (decode_input->icode) == (I_LEAQ)) {
 	    get_word_val(mem, valp, &valc);
 	    valp+= 8;
     }
@@ -562,20 +574,7 @@ void do_fetch_stage()
         fetch_input -> predPC = decode_input -> valp;
     }
 
-    /* TODO: Adjust this to account for error statuses */
-    if (imem_icode == I_HALT) {
-        decode_input->status = STAT_HLT;
-    }
-    else {
-        decode_input->status = STAT_AOK;
-    }
-    
-    if (decode_input->status == STAT_AOK) {
-        fetch_input->status = STAT_AOK;
-    }
-    else {
-        fetch_input->status = STAT_BUB;
-    }
+    fetch_input->status = (decode_input->status == STAT_AOK) ? STAT_AOK : STAT_BUB;
 
     decode_input->stage_pc = f_pc;
 
@@ -588,14 +587,14 @@ void do_fetch_stage()
 
 
 /*************************** Decode stage ***************************
- * update [*execute_input]
+ * TODO: update [*execute_input]
  * you may find these functions useful:
  * get_reg_val()
  *******************************************************************/
 void do_decode_stage()
 {
     //set srcA
-    if(decode_output -> icode == I_RRMOVQ || decode_output -> icode == I_RMMOVQ || decode_output -> icode == I_ALU || decode_output -> icode == I_PUSHQ) {
+    if(decode_output -> icode == I_RRMOVQ || decode_output -> icode == I_RMMOVQ || decode_output -> icode == I_ALU || decode_output -> icode == I_PUSHQ || decode_input->icode == I_VECADD || decode_input->icode == I_SHF) {
         execute_input -> srca = decode_output-> ra;
     }
     else if(decode_output -> icode == I_POPQ || decode_output -> icode == I_RET) {
@@ -605,7 +604,7 @@ void do_decode_stage()
         execute_input -> srca = REG_NONE;
     }
     //set srcB
-    if(decode_output -> icode == I_ALU || decode_output -> icode == I_RMMOVQ || decode_output -> icode == I_MRMOVQ || decode_output->icode == I_RRMOVQ) {
+    if(decode_output -> icode == I_ALU || decode_output -> icode == I_RMMOVQ || decode_output -> icode == I_MRMOVQ || decode_output->icode == I_RRMOVQ || (decode_output->icode) == (I_LEAQ) || decode_output->icode == I_VECADD || decode_output->icode == I_SHF) {
         execute_input -> srcb = decode_output -> rb;
     }
     else if(decode_output -> icode == I_PUSHQ || decode_output -> icode == I_POPQ || decode_output -> icode == I_CALL || decode_output -> icode == I_RET) {
@@ -617,7 +616,7 @@ void do_decode_stage()
     }
 
     //set destE
-    if(decode_output -> icode == I_RRMOVQ || decode_output -> icode == I_IRMOVQ || decode_output -> icode == I_ALU) {
+    if(decode_output -> icode == I_RRMOVQ || decode_output -> icode == I_IRMOVQ || decode_output -> icode == I_ALU || decode_output->icode == I_VECADD || decode_output->icode == I_SHF) {
         execute_input -> deste = decode_output -> rb;
     }
     else if(decode_output -> icode == I_PUSHQ || decode_output -> icode == I_POPQ || decode_output -> icode == I_CALL || decode_output -> icode == I_RET) {
@@ -625,6 +624,10 @@ void do_decode_stage()
     }
     else {
         execute_input -> deste = REG_NONE;
+    }
+
+    if(decode_output->icode == I_LEAQ) {
+        execute_input -> deste = decode_output -> ra;
     }
 
     //set destM
@@ -639,8 +642,7 @@ void do_decode_stage()
     d_regvala = get_reg_val(reg, execute_input->srca);
     d_regvalb = get_reg_val(reg, execute_input->srcb);
 
-    
-    //forward/select valA
+    //sets vala
 
     if((decode_output->icode) == (I_CALL) || (decode_output->icode) ==  (I_JMP)) {
         execute_input -> vala =   (decode_output->valp);
@@ -665,7 +667,7 @@ void do_decode_stage()
 
     }
 
-    //forward/select valB
+    //sets valb
 
     if ((execute_input->srcb) == (memory_input->deste)) {
         execute_input -> valb = (memory_input->vale);
@@ -686,7 +688,6 @@ void do_decode_stage()
         execute_input -> valb = d_regvalb;
     }
 
-
     execute_input->icode = decode_output->icode;
     execute_input->ifun = decode_output->ifun;
     execute_input->valc = decode_output->valc;
@@ -694,8 +695,17 @@ void do_decode_stage()
     execute_input->status = decode_output->status;
 }
 
+long long set_cc()
+{
+    return ((((execute_output->icode) == (I_ALU) || (execute_output->icode) == (I_VECADD) || (execute_output->icode) == (I_SHF)) & !((writeback_input->status) == (STAT_ADR) ||
+          (writeback_input->status) == (STAT_INS) || (writeback_input->status) ==
+          (STAT_HLT))) & !((writeback_output->status) == (STAT_ADR) ||
+        (writeback_output->status) == (STAT_INS) || (writeback_output->status) ==
+        (STAT_HLT)));
+}
+
 /************************** Execute stage **************************
- * update [*memory_input, cc_in]
+ * TODO: update [*memory_input, cc_in]
  * you may find these functions useful:
  * cond_holds(), compute_alu(), compute_cc()
  *******************************************************************/
@@ -709,14 +719,7 @@ void do_execute_stage()
     word_t alua, alub;
     alua = alub = 0;
 
-    /* 
-     * TODO: Condition codes should not be updated if there is an error/halt further in the pipeline. 
-     *       Make sure setcc remains false if the status of future pipeline registers is an error or halt. 
-     */
-    if ((execute_output->icode) == (I_ALU)) {
-        setcc = true;
-    }
-
+    setcc = set_cc();
     if(execute_output -> icode == I_ALU) {
         alufun = execute_output -> ifun;
     }
@@ -724,10 +727,10 @@ void do_execute_stage()
         alufun = A_ADD;
     }
 
-    if(execute_output -> icode == I_RRMOVQ || execute_output -> icode == I_ALU) {
+    if(execute_output -> icode == I_RRMOVQ || execute_output -> icode == I_ALU || execute_output->icode  == I_VECADD  || execute_output->icode == I_SHF) {
         alua = execute_output -> vala;
     }
-    else if(execute_output -> icode == I_IRMOVQ || execute_output -> icode == I_RMMOVQ || execute_output -> icode == I_MRMOVQ) {
+    else if(execute_output -> icode == I_IRMOVQ || execute_output -> icode == I_RMMOVQ || execute_output -> icode == I_MRMOVQ || execute_output -> icode == I_LEAQ) {
         alua = execute_output -> valc;
     }
     else if(execute_output -> icode == I_CALL || execute_output -> icode == I_PUSHQ) {
@@ -740,7 +743,7 @@ void do_execute_stage()
         alua = 0;
     }
 
-    if(execute_output -> icode == I_RMMOVQ || execute_output -> icode == I_MRMOVQ || execute_output -> icode == I_ALU || execute_output -> icode == I_CALL || execute_output -> icode == I_PUSHQ || execute_output -> icode == I_RET || execute_output -> icode == I_POPQ) {
+    if(execute_output -> icode == I_RMMOVQ || execute_output -> icode == I_MRMOVQ || execute_output -> icode == I_ALU || execute_output -> icode == I_CALL || execute_output -> icode == I_PUSHQ || execute_output -> icode == I_RET || execute_output -> icode == I_POPQ || execute_output -> icode == I_LEAQ || execute_output->icode  == I_VECADD || execute_output->icode == I_SHF) {
         alub = execute_output -> valb;
     }
     else {
@@ -763,6 +766,42 @@ void do_execute_stage()
 
     if (setcc) {
 	    cc_in = compute_cc(alufun, alua, alub);
+    }
+
+    if (execute_output->icode  == I_VECADD) {
+        int zero_flag = 1;
+        int sign_flag = 0;
+        word_t out = 0;
+        byte_t *a_byte = (byte_t*)&alua;
+        byte_t *b_byte = (byte_t*)&alub;
+        byte_t *out_byte = (byte_t*)&out;
+        for (size_t i = 0; i < 8; i++) {
+            out_byte[i] = a_byte[i] + b_byte[i];
+            zero_flag &= (out_byte[i] == 0);
+            sign_flag |= ((out_byte[i] >> 7) != 0);
+        }
+        memory_input->vale = out;
+        cc_in = PACK_CC(zero_flag, sign_flag, 0);
+    }
+
+    if (execute_output->icode == I_SHF) {
+        word_t out = 0;
+        switch((shf_t)execute_output->ifun) {
+        case S_AR:
+            out = alub >> alua;
+            break;
+        case S_HL:
+            out = alub << alua;
+            break;
+        case S_HR:
+            out = ((uword_t)alub) >> alua;
+            break;
+        case S_NONE:
+            out = 0;
+            break;
+        }   
+        memory_input->vale = out;
+        cc_in = PACK_CC(!out, (out >> 63) & 0x1, 0);
     }
 
     memory_input->icode = execute_output->icode;
@@ -790,7 +829,7 @@ void do_execute_stage()
 }
 
 /*************************** Memory stage **************************
- * update [*writeback_input, mem_addr, mem_data, mem_write]
+ * TODO: update [*writeback_input, mem_addr, mem_data, mem_write]
  * you may find these functions useful:
  * get_word_val()
  *******************************************************************/
@@ -854,18 +893,22 @@ void do_memory_stage()
     writeback_input->valm = valm;
     writeback_input->deste = memory_output->deste;
     writeback_input->destm = memory_output->destm;
-    /* TODO: Update the status to account for memory access errors.
-     * hint: use dmem_error, which is already set for you. */
-    writeback_input->status = memory_output->status;
+    writeback_input->status = ((dmem_error) ? (STAT_ADR) : (memory_output->status));
     writeback_input->stage_pc = memory_output->stage_pc;
 
 }
 
 /******************** Writeback stage *********************
- * update [wb_destE, wb_valE, wb_destM, wb_valM, status]
+ * TODO: update [wb_destE, wb_valE, wb_destM, wb_valM, status]
  *******************************************************************/
 void do_writeback_stage()
 {
+    /* dummy placeholders, replace them with your implementation */
+    wb_destE = REG_NONE;
+    wb_valE = 0;
+    wb_destM = REG_NONE;
+    wb_valM = 0;
+
     wb_destE = writeback_output -> deste;
     wb_valE = writeback_output -> vale;
     wb_destM = writeback_output -> destm;
@@ -910,11 +953,6 @@ p_stat_t pipe_cntl(char *name, word_t stall, word_t bubble)
  * update_pipes() will handle the real control behavior later
  * make sure you have a working PIPE before implementing this
  *******************************************************************/
-// Some helper function interfaces, for helping readability.
-long long check_load_use();
-long long check_mispredicted_branch();
-long long check_return();
-
 long long f_stall();
 long long d_stall();
 long long w_stall();
@@ -934,11 +972,17 @@ void do_stall_check()
 }
 
 long long f_stall() {
-   return check_load_use() || check_return();
+   return ((((execute_output->icode) == (I_MRMOVQ) || (execute_output->icode) ==
+          (I_POPQ)) & ((execute_output->destm) == (execute_input->srca) ||
+          (execute_output->destm) == (execute_input->srcb))) | ((I_RET) ==
+        (decode_output->icode) || (I_RET) == (execute_output->icode) || (I_RET)
+         == (memory_output->icode)));
 }
 
 long long d_stall() {
-     return check_load_use();
+     return (((execute_output->icode) == (I_MRMOVQ) || (execute_output->icode) ==
+        (I_POPQ)) & ((execute_output->destm) == (execute_input->srca) ||
+        (execute_output->destm) == (execute_input->srcb)));
 }
 
 long long w_stall()
@@ -949,12 +993,20 @@ long long w_stall()
 
 long long d_bubble()
 {
-    return check_mispredicted_branch() || (!check_load_use() && check_return());
+    return ((((execute_output->icode) == (I_JMP)) & !(memory_input->takebranch))
+       | (!(((execute_output->icode) == (I_MRMOVQ) || (execute_output->icode) ==
+            (I_POPQ)) & ((execute_output->destm) == (execute_input->srca) ||
+            (execute_output->destm) == (execute_input->srcb))) & ((I_RET) ==
+          (decode_output->icode) || (I_RET) == (execute_output->icode) || (I_RET)
+           == (memory_output->icode))));
 }
 
 long long e_bubble()
 {
-    return check_load_use() || check_mispredicted_branch();
+    return ((((execute_output->icode) == (I_JMP)) & !(memory_input->takebranch))
+       | (((execute_output->icode) == (I_MRMOVQ) || (execute_output->icode) ==
+          (I_POPQ)) & ((execute_output->destm) == (execute_input->srca) ||
+          (execute_output->destm) == (execute_input->srcb))));
 }
 
 long long m_bubble()
@@ -963,29 +1015,6 @@ long long m_bubble()
          == (STAT_INS) || (writeback_input->status) == (STAT_HLT)) | (
         (writeback_output->status) == (STAT_ADR) || (writeback_output->status) ==
         (STAT_INS) || (writeback_output->status) == (STAT_HLT)));
-}
-
-// These are just helper methods for improving readability.
-// It's your choice to implement them or not.
-
-// Returns true if there is a load-use hazard 
-// in the pipeline, false otherwise.
-long long check_load_use() {
-    return ((execute_output->icode == I_MRMOVQ || execute_output->icode ==
-          I_POPQ) && (execute_output->destm == execute_input->srca ||
-          execute_output->destm == execute_input->srcb));
-}
-
-// Returns true if there is a mispredicted branch hazard 
-// in the pipeline, false otherwise.
-long long check_mispredicted_branch() {
-    return ((execute_output->icode == I_JMP) && !memory_input->takebranch);
-}
-
-// Returns true if there is a return hazard 
-// in the pipeline, false otherwise.
-long long check_return() {
-    return (I_RET == decode_output->icode || I_RET == execute_output->icode || I_RET == memory_output->icode);
 }
 
 /*
